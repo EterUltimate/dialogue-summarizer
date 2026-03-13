@@ -15,6 +15,46 @@ echo Working directory: %CD%
 echo.
 
 REM ============================================
+REM Show menu
+REM ============================================
+echo Please select an option:
+echo.
+echo   [1] Start Application
+echo   [2] Configuration Wizard (Recommended for first-time setup)
+echo   [3] Exit
+echo.
+set /p CHOICE="Enter your choice (1/2/3): "
+
+if "%CHOICE%"=="2" goto :config_wizard
+if "%CHOICE%"=="3" exit /b 0
+if "%CHOICE%"=="1" goto :main_app
+echo Invalid choice, starting main application...
+goto :main_app
+
+REM ============================================
+REM Configuration Wizard
+REM ============================================
+:config_wizard
+echo.
+echo Starting Configuration Wizard...
+echo Visit http://localhost:7861 for the wizard
+echo.
+goto :setup_and_run
+
+REM ============================================
+REM Main Application
+REM ============================================
+:main_app
+echo.
+echo Starting Main Application...
+echo.
+
+REM ============================================
+REM Setup and Run
+REM ============================================
+:setup_and_run
+
+REM ============================================
 REM Auto-detect Python installation
 REM ============================================
 echo Detecting Python installation...
@@ -117,7 +157,7 @@ exit /b 1
 REM ============================================
 REM Python found
 REM ============================================
-:python_found
+::python_found
 echo Found Python: %PYTHON_CMD%
 %PYTHON_CMD% --version
 echo.
@@ -168,40 +208,65 @@ if %errorlevel% neq 0 (
 )
 
 REM ============================================
-REM Check .env configuration
+REM Run selected application
 REM ============================================
-if not exist ".env" (
+if "%CHOICE%"=="2" (
     echo.
     echo ========================================
-    echo  Configuration Required
+    echo  Starting Configuration Wizard...
+    echo  Visit http://localhost:7861
     echo ========================================
     echo.
-    echo Creating .env from .env.example...
-    copy .env.example .env >nul
+    echo Press Ctrl+C to stop
     echo.
-    echo Please edit .env to configure:
-    echo   - DIALOGUE_BACKEND: ollama or openai
-    echo   - Your model settings
+    python config_wizard.py
+) else (
+    REM ============================================
+    REM Check .env configuration
+    REM ============================================
+    if not exist ".env" (
+        echo.
+        echo ========================================
+        echo  Configuration Required
+        echo ========================================
+        echo.
+        echo No .env file found. Options:
+        echo   1. Run Configuration Wizard (recommended)
+        echo   2. Create from template and edit manually
+        echo.
+        set /p CONFIG_CHOICE="Choose option (1/2): "
+        
+        if "!CONFIG_CHOICE!"=="1" (
+            echo.
+            echo Starting Configuration Wizard...
+            echo Visit http://localhost:7861
+            echo.
+            python config_wizard.py
+            pause
+            exit /b 0
+        ) else (
+            copy .env.example .env >nul
+            echo.
+            echo Created .env from template.
+            echo Opening editor...
+            notepad .env
+            echo.
+            echo Run this script again after configuration.
+            pause
+            exit /b 1
+        )
+    )
+    
     echo.
-    notepad .env
+    echo ========================================
+    echo  Starting application...
+    echo  Visit http://localhost:7860
+    echo ========================================
     echo.
-    echo Run this script again after configuration.
-    pause
-    exit /b 1
+    echo Press Ctrl+C to stop the server
+    echo.
+    
+    python app.py
 )
-
-REM ============================================
-REM Start application
-REM ============================================
-echo.
-echo ========================================
-echo  Starting application...
-echo  Visit http://localhost:7860
-echo ========================================
-echo.
-echo Press Ctrl+C to stop the server
-echo.
-
-python app.py
 
 pause

@@ -289,6 +289,90 @@ LLM模型: {config.ollama.llm_model if config.backend == 'ollama' else config.op
                     app.export_text,
                     outputs=[export_file, export_status]
                 )
+            
+            # Tab 6: 设置
+            with gr.TabItem("⚙️ 设置"):
+                gr.Markdown("## 系统配置")
+                gr.Markdown("修改配置后需要重启应用才能生效")
+                
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("### 当前配置")
+                        current_config = gr.Textbox(
+                            label="当前配置信息",
+                            value=f"""后端类型: {config.backend}
+
+Ollama配置:
+  - 服务地址: {config.ollama.base_url}
+  - Embedding模型: {config.ollama.embedding_model}
+  - LLM模型: {config.ollama.llm_model}
+
+OpenAI配置:
+  - API地址: {config.openai.base_url}
+  - Embedding模型: {config.openai.embedding_model}
+  - LLM模型: {config.openai.llm_model}
+
+向量数据库: {config.vectordb.type}""",
+                            lines=12,
+                            interactive=False
+                        )
+                    
+                    with gr.Column():
+                        gr.Markdown("### 配置工具")
+                        gr.Markdown("""
+**配置向导**: 打开图形化配置界面
+- 选择后端类型（Ollama/OpenAI）
+- 配置模型参数
+- 测试连接
+- 保存配置
+
+配置向导将在新窗口打开（端口7861）
+                        """)
+                        
+                        wizard_btn = gr.Button("🔧 打开配置向导", variant="primary")
+                        wizard_status = gr.Textbox(label="状态", interactive=False)
+                        
+                        def open_config_wizard():
+                            import subprocess
+                            import sys
+                            try:
+                                # 启动配置向导
+                                subprocess.Popen([sys.executable, "config_wizard.py"])
+                                return "✅ 配置向导已启动，请访问 http://localhost:7861"
+                            except Exception as e:
+                                return f"❌ 启动失败: {str(e)}"
+                        
+                        wizard_btn.click(open_config_wizard, outputs=[wizard_status])
+                        
+                        gr.Markdown("""
+### 配置文件
+配置保存在 `.env` 文件中，也可以手动编辑。
+                        """)
+                        
+                        edit_btn = gr.Button("📝 打开配置文件")
+                        edit_status = gr.Textbox(label="", interactive=False)
+                        
+                        def open_env_file():
+                            import subprocess
+                            import platform
+                            env_path = os.path.join(os.path.dirname(__file__), ".env")
+                            if not os.path.exists(env_path):
+                                # 从示例创建
+                                example_path = os.path.join(os.path.dirname(__file__), ".env.example")
+                                if os.path.exists(example_path):
+                                    import shutil
+                                    shutil.copy(example_path, env_path)
+                            
+                            try:
+                                if platform.system() == "Windows":
+                                    os.system(f'notepad "{env_path}"')
+                                else:
+                                    subprocess.Popen(["nano", env_path])
+                                return "✅ 已打开配置文件，修改后请重启应用"
+                            except Exception as e:
+                                return f"❌ 打开失败: {str(e)}"
+                        
+                        edit_btn.click(open_env_file, outputs=[edit_status])
     
     return demo
 
