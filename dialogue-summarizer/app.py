@@ -7,6 +7,11 @@ import json
 import gradio as gr
 from typing import Optional
 
+# 禁用代理，避免连接错误
+os.environ['HTTP_PROXY'] = ''
+os.environ['HTTPS_PROXY'] = ''
+os.environ['NO_PROXY'] = '*'
+
 from config import config
 from embeddings import get_embedding_model
 from vectordb import get_vector_store
@@ -309,10 +314,11 @@ def main():
     """)
     
     demo.launch(
-        server_name="0.0.0.0",
+        server_name="127.0.0.1",
         server_port=7860,
         share=False,
-        show_error=True
+        show_error=True,
+        prevent_thread_lock=False
     )
 
 

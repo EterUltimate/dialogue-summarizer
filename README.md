@@ -194,4 +194,4 @@ A: 尝试使用更大的LLM模型，或调整检索深度(top_k)。
 
 ## License
 
-GPL-3.0
+MIT
